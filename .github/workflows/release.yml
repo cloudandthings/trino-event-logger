@@ -1,0 +1,70 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 22
+        uses: actions/setup-java@v2
+        with:
+          java-version: '22'
+          distribution: 'adopt'
+
+      - name: Set up Maven
+        uses: actions/setup-java@v2
+        with:
+          java-version: '22'
+          distribution: 'adopt'
+          cache: 'maven'
+
+      # - name: Install Maven 3.9.9
+      #   run: |
+      #     wget https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+      #     tar -xzf apache-maven-3.9.9-bin.tar.gz
+      #     sudo mv apache-maven-3.9.9 /opt/maven
+      #     sudo ln -s /opt/maven/bin/mvn /usr/bin/mvn
+
+      - name: Verify POM
+        run: mvn com.github.ekryd.sortpom:sortpom-maven-plugin:4.0.0:verify
+
+      - name: Build with Maven
+        run: mvn clean package dependency:copy-dependencies -DskipTests -DincludeScope=runtime
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Zip required files
+        run: |
+          mkdir -p target/archive
+          cp target/dependency/*.jar target/archive/
+          cp target/trino-event-logger*.jar target/archive/
+          cd target/archive
+          zip -r ../package.zip .
+
+      - name: Upload ZIP file
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/package.zip
+          asset_name: package.zip
+          asset_content_type: application/zip
