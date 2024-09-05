@@ -18,6 +18,34 @@ cp -r target/dependency/*.jar /path/to/trino/folder/plugin
 cp -r target/trino-event-logger*.jar /path/to/trino/folder/plugin
 ```
 
+Adding the plugin to a docker image:
+```Dockerfile
+# First stage: Download and unzip the plugin
+FROM alpine:latest as downloader
+
+# Install necessary tools
+RUN apk add --no-cache curl unzip
+
+# Create a directory for the plugin
+RUN mkdir -p /tmp/trino-event-logger-unpacked
+
+# Download and unzip the content from GitHub into the plugin directory
+RUN curl -L -o /tmp/trino-event-logger.zip https://github.com/cloudandthings/trino-event-logger/releases/download/452.1/package.zip \
+    && unzip /tmp/trino-event-logger.zip -d /tmp/trino-event-logger-unpacked
+
+# Second stage: Use the Trino base image
+FROM trinodb/trino:452
+
+# Create the plugin directory
+RUN mkdir -p /usr/lib/trino/plugin/trino-event-logger
+
+# Copy the unzipped plugin from the first stage
+COPY --from=downloader /tmp/trino-event-logger-unpacked/* /usr/lib/trino/plugin/trino-event-logger/
+
+# Start Trino
+CMD ["/usr/lib/trino/bin/run-trino"]
+```
+
 Create a database/schema in MySQL:
 
 ```
