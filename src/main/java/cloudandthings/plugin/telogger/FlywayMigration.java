@@ -38,7 +38,7 @@ public class FlywayMigration
         }
 
         if (configDbUrl.startsWith("jdbc:sqlserver")) {
-            return "/db/mssql";
+            return "/db/sqlserver";
         }
 
         throw new IllegalArgumentException(format("Invalid JDBC URL: %s. Only mysql, postgresql and sqlserver is supported.", configDbUrl));
