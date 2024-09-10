@@ -52,7 +52,7 @@ public class TELogger
                 "INSERT INTO queries (" +
                 "  query_id," +
                 "  catalog," +
-                "  `schema`," +
+                "  schema_name," +
                 "  environment," +
                 "  query_text," +
                 "  query_plan," +
@@ -96,7 +96,7 @@ public class TELogger
                 "VALUES (" +
                 "  :query_id," +
                 "  :catalog," +
-                "  :schema," +
+                "  :schema_name," +
                 "  :environment," +
                 "  :query_text," +
                 "  :query_plan," +
@@ -154,7 +154,7 @@ public class TELogger
         handle.createUpdate(sql)
                 .bind("query_id", queryCompletedEvent.getMetadata().getQueryId())
                 .bind("catalog", queryCompletedEvent.getContext().getCatalog().orElse(""))
-                .bind("schema", queryCompletedEvent.getContext().getSchema().orElse(""))
+                .bind("schema_name", queryCompletedEvent.getContext().getSchema().orElse(""))
                 .bind("environment", queryCompletedEvent.getContext().getEnvironment())
                 .bind("query_text", queryCompletedEvent.getMetadata().getQuery())
                 .bind("query_plan", queryCompletedEvent.getMetadata().getPlan().orElse(""))
