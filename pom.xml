@@ -4,7 +4,7 @@
 
   <groupId>cloudandthings</groupId>
   <artifactId>trino-event-logger</artifactId>
-  <version>452.1</version>
+  <version>452.4</version>
   <description>A Trino Event Logger. Supports MSSQL, MYSQL and PostGreSQL</description>
 
   <properties>

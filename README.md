@@ -80,3 +80,8 @@ If the plugin is working correctly, you will see the following in the Trino
 2022-04-29T16:03:12.663-0400	INFO	main	io.trino.dblistener.FlywayMigration	Performed 1 migrations
 ```
 
+## Testing
+```bash
+docker compose up --build
+docker compose down -v
+```
