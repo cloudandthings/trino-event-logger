@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 package cloudandthings.plugin.telogger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import io.airlift.json.JsonCodec;
 import io.airlift.json.JsonCodecFactory;
@@ -91,7 +92,13 @@ public class TELogger
                 "  cumulative_memory," +
                 "  failed_cumulative_memory," +
                 "  completed_splits," +
-                "  stage_gc_statistics" +
+                "  stage_gc_statistics," +
+                "  user_name," +
+                "  user_original," +
+                "  server_version," +
+                "  enabled_roles," +
+                "  groups," +
+                "  principal" +
                 ")" +
                 "VALUES (" +
                 "  :query_id," +
@@ -135,7 +142,13 @@ public class TELogger
                 "  :cumulative_memory," +
                 "  :failed_cumulative_memory," +
                 "  :completed_splits," +
-                "  :stage_gc_statistics" +
+                "  :stage_gc_statistics," +
+                "  :user_name," +
+                "  :user_original," +
+                "  :server_version," +
+                "  :enabled_roles," +
+                "  :groups," +
+                "  :principal" +
                 ")";
 
         QueryStatistics queryStatistics = queryCompletedEvent.getStatistics();
@@ -150,6 +163,13 @@ public class TELogger
         long failedInputBlockedTime = queryStatistics.getFailedInputBlockedTime().isPresent() ? queryStatistics.getFailedInputBlockedTime().get().toMillis() : 0;
         long outputBlockedTime = queryStatistics.getOutputBlockedTime().isPresent() ? queryStatistics.getOutputBlockedTime().get().toMillis() : 0;
         long failedOutputBlockedTime = queryStatistics.getFailedOutputBlockedTime().isPresent() ? queryStatistics.getFailedOutputBlockedTime().get().toMillis() : 0;
+
+        String contextUser = queryCompletedEvent.getContext().getUser();
+        String contextUserOriginal = queryCompletedEvent.getContext().getOriginalUser();
+        String contextServerVersion = queryCompletedEvent.getContext().getServerVersion();
+        String contextEnabledRoles = String.join(",", queryCompletedEvent.getContext().getEnabledRoles());
+        String contextGroups = String.join(",", queryCompletedEvent.getContext().getGroups());
+        String contextPrincipal = queryCompletedEvent.getContext().getPrincipal().orElse("");
 
         handle.createUpdate(sql)
                 .bind("query_id", queryCompletedEvent.getMetadata().getQueryId())
@@ -194,6 +214,12 @@ public class TELogger
                 .bind("failed_cumulative_memory", queryStatistics.getFailedCumulativeMemory())
                 .bind("completed_splits", queryStatistics.getCompletedSplits())
                 .bind("stage_gc_statistics", STAGE_GC_STATS_CODEC.toJson(queryStatistics.getStageGcStatistics()))
+                .bind("user_name", contextUser)
+                .bind("user_original", contextUserOriginal)
+                .bind("server_version", contextServerVersion)
+                .bind("enabled_roles", contextEnabledRoles)
+                .bind("groups", contextGroups)
+                .bind("principal", contextPrincipal)
                 .execute();
     }
 }
